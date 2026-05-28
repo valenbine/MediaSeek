@@ -110,6 +110,8 @@
 **/.env.*.local
 *.pem
 *.key
+cookies.txt
+cookies.sqlite
 
 # Temporary files
 *.tmp

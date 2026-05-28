@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <meta
+        name="description"
+        content="MediaSeek 寻音觅影支持在线视频解析、预览和下载，提供视频、音频、封面、描述和字幕等内容获取能力。"
+      />
+    <title>MediaSeek 寻音觅影</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero" aria-labelledby="app-title">
+        <div class="hero__content">
+          <p class="eyebrow">在线视频解析与下载</p>
+          <h1 id="app-title">MediaSeek 寻音觅影</h1>
+          <p class="hero__copy">
+            输入视频页面地址，可按解析器要求上传 Cookie 文件辅助解析。MediaSeek 仅在本次解析中临时使用 Cookie，不保存、不记录，大文件优先由浏览器直连源站下载。
+          </p>
+          <div class="hero__badges" aria-label="功能特点">
+            <span>视频解析</span>
+            <span>在线播放</span>
+            <span>下载保存</span>
+          </div>
+        </div>
+        <div class="hero__visual" aria-hidden="true">
+          <div class="orb orb--green"></div>
+          <div class="orb orb--purple"></div>
+          <div class="media-card">
+            <div class="media-visual">
+              <div class="media-bar"></div>
+              <div class="media-bar"></div>
+              <div class="media-bar media-bar--accent"></div>
+              <div class="media-bar"></div>
+              <div class="media-bar"></div>
+              <div class="media-bar media-bar--accent"></div>
+              <div class="media-bar"></div>
+              <div class="media-bar"></div>
+            </div>
+            <div class="media-info">
+               <span class="media-label">MEDIA</span>
+               <span class="media-label media-label--accent">SEEK</span>
+             </div>
+            <div class="media-display">PREVIEW AND SAVE</div>
+            <div class="stream-meter" aria-hidden="true">
+              <span></span>
+            </div>
+            <div class="route-chips" aria-hidden="true">
+              <span>Video</span>
+              <span>Audio</span>
+              <span>Preview</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="workspace" aria-label="视频解析工作台">
+        <div class="workspace-intro analysis-card">
+          <div class="analysis-card__topline">
+            <div>
+              <p class="eyebrow">Workbench</p>
+              <h2>主舞台下方的双入口工作台</h2>
+            </div>
+            <span class="status-pill">Ready Flow</span>
+          </div>
+          <p class="status-copy">
+            先从关键词搜索或直接贴链接进入，再在下方统一处理解析器、Cookie 会话和当前解析状态。整体流程保持清晰，首屏重心更集中。
+          </p>
+        </div>
+
+        <div class="workspace-primary" aria-label="主入口区">
+          <form class="upload-card search-card" id="search-form">
+            <div class="upload-card__header">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"></circle>
+                <path d="M20 20l-3.5-3.5"></path>
+              </svg>
+              <div>
+                <h2>关键词搜索</h2>
+                <p>当前版本支持 B 站关键词搜索。搜索结果会先确认解析器，再送入现有解析流程。</p>
+              </div>
+            </div>
+
+            <label class="search-box" for="search-keyword">
+              <input id="search-keyword" type="text" placeholder="输入关键词，例如：周杰伦 晴天 MV" autocomplete="off" />
+              <span class="drop-zone__hint">输入 B 站关键词后，从搜索结果中选择目标视频。</span>
+            </label>
+
+            <button class="secondary-action search-action" type="submit" id="search-button">开始搜索</button>
+
+            <div class="search-results" id="search-results">
+              <div class="search-results__empty">搜索结果会显示在这里</div>
+            </div>
+          </form>
+
+          <form class="upload-card parse-card" id="parse-form">
+            <div class="upload-card__header">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L11 4.93" />
+                <path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07L13 19.07" />
+              </svg>
+              <div>
+                <h2>粘贴视频地址</h2>
+                <p>支持常见视频页面解析。Cookie 文件仅用于本次解析，系统不会留存或写入日志。</p>
+              </div>
+            </div>
+
+            <label class="drop-zone url-zone" for="video-url" id="url-zone">
+              <textarea id="video-url" placeholder="https://example.com/watch?v=..." autocomplete="url" rows="5" required></textarea>
+              <span class="drop-zone__title">输入公开视频页面 URL</span>
+              <span class="drop-zone__hint">后端只解析元信息，不预下载大文件。</span>
+            </label>
+
+            <div class="parse-card__controls">
+              <div class="parse-card__input-stack">
+                <div class="engine-control">
+                  <label for="engine-select">解析器</label>
+                  <select id="engine-select">
+                    <option value="you-get" selected>you-get</option>
+                    <option value="yt-dlp">yt-dlp</option>
+                    <option value="lux">lux</option>
+                  </select>
+                  <p>默认使用 you-get。你可以按站点兼容性手动切换解析器。</p>
+                </div>
+
+                <label class="drop-zone cookie-zone" for="cookie-file" id="cookie-zone">
+                  <input id="cookie-file" type="file" accept=".txt,.sqlite,text/plain,application/x-sqlite3" />
+                  <span class="drop-zone__title" id="cookie-file-title">可选：上传 Cookie 文件</span>
+                  <span class="drop-zone__hint" id="cookie-file-hint">you-get 仅支持 Firefox 导出的 cookies.sqlite；yt-dlp 与 lux 支持 cookies.txt，也支持 Firefox 导出的 cookies.sqlite；解析完成后立即删除临时文件。</span>
+                </label>
+
+                <button class="primary-action" type="submit" id="parse-button">开始解析</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="workspace-secondary" aria-label="辅助信息区">
+          <div class="cookie-session-card analysis-card" aria-label="Cookie 会话管理">
+            <div class="cookie-session-card__topline">
+              <div>
+                <p class="eyebrow">Cookie Session</p>
+                <h3>Cookie 会话管理</h3>
+              </div>
+              <span class="status-pill" id="cookie-session-pill">未加载</span>
+            </div>
+            <p class="cookie-session-copy" id="cookie-session-copy">当前没有已加载的 Cookie 会话。你可以先选择文件，再加载到服务端会话中反复复用。</p>
+            <div class="cookie-session-meta" id="cookie-session-meta"></div>
+            <div class="cookie-session-actions">
+              <button class="secondary-action" type="button" id="cookie-load-button">加载 Cookie 会话</button>
+              <button class="secondary-action" type="button" id="cookie-clear-button" disabled>清除 Cookie 会话</button>
+            </div>
+          </div>
+
+          <div class="analysis-card status-card">
+            <div class="analysis-card__topline">
+              <div>
+                <p class="eyebrow">当前状态</p>
+                <h2 id="status-title">等待输入</h2>
+              </div>
+              <span class="status-pill" id="status-pill">Idle</span>
+            </div>
+            <p class="status-copy" id="status-copy">
+              解析后会展示可用格式、字幕和封面。若源站要求登录 Cookie，请按当前解析器支持的格式上传后重试。
+            </p>
+            <div class="progress" aria-label="解析进度">
+              <span id="progress-bar"></span>
+            </div>
+
+            <div class="summary-grid" aria-label="解析摘要">
+              <div>
+                <span class="metric" id="format-count">--</span>
+                <span class="metric-label">格式</span>
+              </div>
+              <div>
+                <span class="metric" id="subtitle-count">--</span>
+                <span class="metric-label">字幕</span>
+              </div>
+              <div>
+                <span class="metric" id="duration">--</span>
+                <span class="metric-label">时长</span>
+              </div>
+              <div>
+                <span class="metric" id="extractor">--</span>
+                <span class="metric-label">解析工具</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section class="guide-card guide-card--collapsible" aria-labelledby="cookie-guide-title">
+          <details class="guide-disclosure">
+            <summary class="guide-disclosure__summary">
+              <div>
+                <p class="eyebrow">Cookie Guide</p>
+                <h2 id="cookie-guide-title">导出 Cookie 指引</h2>
+              </div>
+              <span class="guide-disclosure__hint">按需展开查看</span>
+            </summary>
+            <div class="guide-disclosure__body">
+              <p class="guide-card__intro">当前 Web 版无法自动读取你本机浏览器登录态。请先从浏览器导出目标站点 Cookie，再上传到这里解析。</p>
+              <div class="guide-list" aria-label="Cookie 导出说明">
+                <article class="guide-item">
+                  <strong>you-get</strong>
+                  <p>推荐使用 Firefox 已登录对应站点后，直接上传该浏览器配置目录里的 <code>cookies.sqlite</code>。</p>
+                  <div class="guide-steps">
+                    <p>常见位置：</p>
+                    <ul>
+                      <li>Windows：<code>%APPDATA%\Mozilla\Firefox\Profiles\&lt;profile&gt;\cookies.sqlite</code></li>
+                      <li>macOS：<code>~/Library/Application Support/Firefox/Profiles/&lt;profile&gt;/cookies.sqlite</code></li>
+                      <li>Linux：<code>~/.mozilla/firefox/&lt;profile&gt;/cookies.sqlite</code></li>
+                    </ul>
+                    <p>建议步骤：</p>
+                    <ol>
+                      <li>先在 Firefox 中登录目标视频网站。</li>
+                      <li>打开 <code>about:profiles</code>，找到当前正在使用的配置目录。</li>
+                      <li>关闭 Firefox，避免数据库还在占用。</li>
+                      <li>进入对应配置目录，找到 <code>cookies.sqlite</code>。</li>
+                      <li>把这个文件上传到 MediaSeek。</li>
+                    </ol>
+                  </div>
+                </article>
+                <article class="guide-item">
+                  <strong>yt-dlp</strong>
+                  <p>推荐从已登录浏览器导出 <code>cookies.txt</code>。如果你手头只有 Firefox 的 <code>cookies.sqlite</code>，也可以直接上传。</p>
+                  <div class="guide-steps">
+                    <p><code>cookies.txt</code> 推荐导出方法：</p>
+                    <ol>
+                      <li>在浏览器扩展商店安装支持导出 Cookie 的扩展，例如 “Get cookies.txt LOCALLY”。</li>
+                      <li>打开目标视频网站并确认当前账号已经登录。</li>
+                      <li>在目标网站页面点击扩展，选择导出当前站点 Cookie。</li>
+                      <li>保存为 <code>cookies.txt</code> 文件。</li>
+                      <li>把导出的 <code>cookies.txt</code> 上传到 MediaSeek。</li>
+                    </ol>
+                    <p>适用浏览器：Chrome、Edge、Brave、Firefox 等常见浏览器。</p>
+                  </div>
+                </article>
+                <article class="guide-item">
+                  <strong>lux</strong>
+                  <p>推荐上传 <code>cookies.txt</code>。如果你使用 Firefox，也可以上传 <code>cookies.sqlite</code> 让后端自动转换。</p>
+                  <div class="guide-steps">
+                    <p>推荐做法：</p>
+                    <ol>
+                      <li>优先按上面的方式导出 <code>cookies.txt</code>。</li>
+                      <li>如果你已经在 Firefox 登录过目标站点，也可以直接上传 <code>cookies.sqlite</code>。</li>
+                      <li>遇到 B 站、需要登录或风控较强的网站时，建议使用最新登录态重新导出。</li>
+                    </ol>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </details>
+        </section>
+      </section>
+
+      <section class="results" aria-labelledby="results-title">
+        <div class="section-heading">
+          <p class="eyebrow">Results</p>
+          <h2 id="results-title">解析结果</h2>
+        </div>
+
+        <div class="timeline-card video-result-card">
+          <div class="video-preview" id="video-preview">
+            <div class="video-preview__empty">解析成功后显示视频信息</div>
+          </div>
+          <div class="timeline-card__header">
+            <h3>下载选项</h3>
+            <div class="timeline-actions">
+              <button class="secondary-action" id="download-cover-button" type="button" disabled>封面</button>
+              <button class="secondary-action" id="download-description-button" type="button" disabled>描述</button>
+              <button class="secondary-action" id="download-subtitle-button" type="button" disabled>字幕</button>
+            </div>
+          </div>
+
+          <div class="transport" aria-label="下载控制">
+            <div class="format-grid">
+              <div class="format-control">
+                <label for="video-format-select">视频格式</label>
+                <select id="video-format-select" disabled>
+                  <option value="">解析后选择视频</option>
+                </select>
+                <button class="play-action" id="merge-media-button" type="button" disabled>下载视频</button>
+              </div>
+              <div class="format-control">
+                <label for="audio-format-select">音频格式</label>
+                <select id="audio-format-select" disabled>
+                  <option value="">解析后选择音频</option>
+                </select>
+                <button class="play-action" id="download-audio-button" type="button" disabled>下载音频</button>
+              </div>
+            </div>
+          </div>
+
+          <details class="merge-log-card" id="merge-log-details" aria-label="合并日志">
+            <summary class="merge-log-card__header">
+              <h3>合并日志</h3>
+              <span class="merge-log-card__hint">按需展开查看</span>
+            </summary>
+            <div class="merge-log-card__actions">
+              <button class="secondary-action" id="merge-log-clear-button" type="button">清空</button>
+            </div>
+            <pre class="merge-log" id="merge-log">等待合并任务开始...</pre>
+          </details>
+        </div>
+      </section>
+
+      <footer class="site-footer" aria-label="作者信息">
+        <p class="site-footer__title">作者信息</p>
+        <div class="site-footer__meta">
+          <span>项目：MediaSeek / 寻音觅影</span>
+          <a href="mailto:valnebine@163.com">邮箱：valnebine@163.com</a>
+          <a href="https://github.com/valenbine/MediaSeek" target="_blank" rel="noreferrer">仓库地址：https://github.com/valenbine/MediaSeek</a>
+        </div>
+      </footer>
+    </main>
+
+    <dialog class="engine-picker-dialog" id="engine-picker-dialog">
+      <form class="engine-picker-dialog__card" method="dialog">
+        <div class="engine-picker-dialog__header">
+          <div>
+            <p class="eyebrow">选择解析器</p>
+            <h3>确认解析器</h3>
+          </div>
+        </div>
+        <p class="engine-picker-dialog__copy" id="engine-picker-copy">请选择当前搜索结果要使用的解析器。</p>
+        <div class="engine-picker-options" id="engine-picker-options"></div>
+        <div class="engine-picker-actions">
+          <button class="secondary-action" type="button" id="engine-picker-cancel">取消</button>
+          <button class="primary-action engine-picker-confirm" type="submit" value="confirm-parse">开始解析</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="./src/main.js?v=20260528-layout-refresh"></script>
+  </body>
+</html>

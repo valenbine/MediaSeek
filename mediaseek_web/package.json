@@ -1,0 +1,14 @@
+{
+  "name": "mediaseek-web",
+  "version": "1.0.0",
+  "description": "MediaSeek 寻音觅影: web media parser and downloader powered by you-get, yt-dlp and lux",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "python3 backend.py",
+    "dev": "python3 backend.py"
+  },
+  "dependencies": {
+    "formidable": "^3.5.4"
+  }
+}
