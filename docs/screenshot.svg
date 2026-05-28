@@ -1,0 +1,57 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">MediaSeek Web Interface Preview</title>
+  <desc id="desc">A stylized preview image for the MediaSeek web media parser and downloader.</desc>
+  <rect width="1280" height="720" fill="#090914"/>
+  <g opacity="0.42">
+    <circle cx="260" cy="116" r="230" fill="#22c55e"/>
+    <circle cx="1030" cy="90" r="280" fill="#7c3aed"/>
+  </g>
+  <path d="M0 0h1280v720H0z" fill="url(#grid)" opacity="0.22"/>
+  <rect x="74" y="62" width="1132" height="596" rx="42" fill="rgba(30,27,75,0.72)" stroke="rgba(255,255,255,0.16)"/>
+  <text x="122" y="138" fill="#86efac" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="4">ONLINE MEDIA PARSER</text>
+  <text x="122" y="210" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="68" font-weight="800">MediaSeek</text>
+  <text x="122" y="260" fill="#dbe4f6" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="600">寻音觅影</text>
+  <text x="122" y="318" fill="#b8c0d9" font-family="Inter, Arial, sans-serif" font-size="22">Search, parse, preview and save online media streams.</text>
+  <g transform="translate(122 374)">
+    <rect width="242" height="54" rx="27" fill="rgba(255,255,255,0.09)" stroke="rgba(255,255,255,0.18)"/>
+    <text x="28" y="35" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">Video Parse</text>
+  </g>
+  <g transform="translate(386 374)">
+    <rect width="206" height="54" rx="27" fill="rgba(255,255,255,0.09)" stroke="rgba(255,255,255,0.18)"/>
+    <text x="28" y="35" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">Preview</text>
+  </g>
+  <g transform="translate(614 374)">
+    <rect width="206" height="54" rx="27" fill="rgba(255,255,255,0.09)" stroke="rgba(255,255,255,0.18)"/>
+    <text x="28" y="35" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">Download</text>
+  </g>
+  <g transform="translate(744 130)">
+    <rect width="350" height="300" rx="34" fill="rgba(255,255,255,0.09)" stroke="rgba(255,255,255,0.18)"/>
+    <rect x="42" y="196" width="266" height="14" rx="7" fill="rgba(255,255,255,0.12)"/>
+    <rect x="42" y="196" width="184" height="14" rx="7" fill="url(#meter)"/>
+    <g transform="translate(67 55)">
+      <rect x="0" y="64" width="24" height="70" rx="8" fill="#86efac"/>
+      <rect x="46" y="34" width="24" height="100" rx="8" fill="#22c55e"/>
+      <rect x="92" y="6" width="34" height="128" rx="9" fill="#fb923c"/>
+      <rect x="146" y="48" width="24" height="86" rx="8" fill="#86efac"/>
+      <rect x="192" y="20" width="34" height="114" rx="9" fill="#7c3aed"/>
+    </g>
+    <text x="74" y="254" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="800">PREVIEW</text>
+  </g>
+  <g transform="translate(122 482)">
+    <rect width="1010" height="92" rx="26" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.14)"/>
+    <rect x="28" y="28" width="520" height="36" rx="18" fill="rgba(255,255,255,0.08)"/>
+    <text x="54" y="52" fill="#b8c0d9" font-family="Inter, Arial, sans-serif" font-size="16">Paste video URL or search keyword</text>
+    <rect x="812" y="24" width="160" height="44" rx="22" fill="#22c55e"/>
+    <text x="854" y="52" fill="#08121f" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="800">Parse</text>
+  </g>
+  <defs>
+    <pattern id="grid" width="72" height="72" patternUnits="userSpaceOnUse">
+      <path d="M72 0H0v72" stroke="white" stroke-opacity="0.2"/>
+    </pattern>
+    <linearGradient id="meter" x1="42" y1="203" x2="226" y2="203" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22c55e"/>
+      <stop offset="0.5" stop-color="#fb923c"/>
+      <stop offset="1" stop-color="#818cf8"/>
+    </linearGradient>
+  </defs>
+</svg>

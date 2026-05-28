@@ -1,6 +1,7 @@
 import asyncio
 import html
 import json
+import os
 import re
 import secrets
 import shutil
@@ -26,11 +27,12 @@ except ImportError:  # pragma: no cover - handled at runtime for clear UI errors
 
 
 APP_DIR = Path(__file__).resolve().parent
-TOKEN_TTL_SECONDS = 6 * 60 * 60
-PARSE_TTL_SECONDS = 30 * 60
-COOKIE_SESSION_TTL_SECONDS = 6 * 60 * 60
+TOKEN_TTL_SECONDS = int(os.getenv("TOKEN_TTL_SECONDS", str(6 * 60 * 60)))
+PARSE_TTL_SECONDS = int(os.getenv("PARSE_TTL_SECONDS", str(30 * 60)))
+COOKIE_SESSION_TTL_SECONDS = int(os.getenv("COOKIE_SESSION_TTL_SECONDS", str(6 * 60 * 60)))
 MAX_FORMATS = 80
-MAX_COOKIE_FILE_BYTES = 16 * 1024 * 1024
+MAX_COOKIE_FILE_BYTES = int(os.getenv("MAX_COOKIE_FILE_BYTES", str(16 * 1024 * 1024)))
+PORT = int(os.getenv("PORT", "5000"))
 ALLOWED_COOKIE_SUFFIXES = {".txt", ".sqlite"}
 FFMPEG_PACKAGE_BASE = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.15/dist/esm"
 DEFAULT_USER_AGENT = (
@@ -187,13 +189,13 @@ def search_with_bilibili_page(keyword: str, limit: int) -> list[dict[str, Any]]:
         results.append({
             "id": match.group("bvid"),
             "title": title,
-            "source": "Bilibili",
+            "source": "Video Site",
             "duration": duration_value,
             "durationText": duration_text(duration_value) if duration_value is not None else duration_raw,
             "thumbnail": thumbnail,
             "webpageUrl": webpage_url,
             "uploader": html.unescape(author) or "--",
-            "engine": "bilibili-search",
+            "engine": "site-search",
             "recommendedEngine": "you-get",
         })
         if len(results) >= limit:
@@ -247,13 +249,13 @@ def search_with_bilibili(keyword: str, limit: int) -> list[dict[str, Any]]:
         results.append({
             "id": item.get("bvid") or item.get("aid") or secrets.token_urlsafe(6),
             "title": title,
-            "source": "Bilibili",
+            "source": "Video Site",
             "duration": duration_value,
             "durationText": duration_text(duration_value) if duration_value is not None else str(item.get("duration") or "--"),
             "thumbnail": thumbnail,
             "webpageUrl": webpage_url,
             "uploader": item.get("author") or "--",
-            "engine": "bilibili-search",
+            "engine": "site-search",
             "recommendedEngine": "you-get",
         })
     return results
@@ -1233,7 +1235,7 @@ def classify_parse_failure(engine: str, target_url: str, error: Exception, cooki
     if "http error 412" in lower_details or "http 412" in lower_details or "precondition failed" in lower_details:
         if is_bilibili_url(target_url) or "bilibili" in lower_details:
             return (
-                "解析失败：B 站当前拒绝了本次解析请求（HTTP 412 Precondition Failed）。"
+                "解析失败：目标视频网站当前拒绝了本次解析请求（HTTP 412 Precondition Failed）。"
                 "这通常表示触发了站点风控或需要有效登录态。"
                 f"{cookie_hint}"
             )
@@ -1252,7 +1254,7 @@ def classify_parse_failure(engine: str, target_url: str, error: Exception, cooki
         return "解析失败：连接源站超时，请稍后重试。"
     if engine == "you-get" and is_bilibili_url(target_url) and ("oops, something went wrong" in lower_details or "don't panic" in lower_details):
         return (
-            "解析失败：B 站当前拒绝了本次解析请求，you-get 未返回可用页面数据。"
+            "解析失败：目标视频网站当前拒绝了本次解析请求，you-get 未返回可用页面数据。"
             f"{cookie_hint}"
         )
     if engine == "you-get" and ("oops, something went wrong" in lower_details or "don't panic" in lower_details):
@@ -1469,7 +1471,7 @@ async def search_video(request: SearchRequest) -> dict[str, Any]:
     return {
         "ok": True,
         "results": results,
-        "engine": "bilibili-search",
+        "engine": "site-search",
         "keyword": keyword,
         "count": len(results),
     }
@@ -1659,4 +1661,4 @@ async def http_error_handler(_, exc: HTTPException) -> JSONResponse:
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    uvicorn.run(app, host="0.0.0.0", port=PORT)

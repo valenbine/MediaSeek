@@ -6,7 +6,8 @@
   "main": "server.js",
   "scripts": {
     "start": "python3 backend.py",
-    "dev": "python3 backend.py"
+    "dev": "python3 backend.py",
+    "check": "python3 -m py_compile backend.py && node --check src/main.js"
   },
   "dependencies": {
     "formidable": "^3.5.4"

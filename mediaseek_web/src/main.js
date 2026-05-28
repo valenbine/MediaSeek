@@ -87,7 +87,7 @@ searchForm.addEventListener("submit", async (event) => {
 
   searchButton.disabled = true;
   searchButton.textContent = "搜索中...";
-  setStatus("正在搜索", "Search", "正在搜索 B 站关键词结果。", 20);
+  setStatus("正在搜索", "Search", "正在搜索视频网站关键词结果。", 20);
 
   try {
     const response = await fetch("/api/search", {
