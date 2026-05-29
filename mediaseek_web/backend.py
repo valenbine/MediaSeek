@@ -68,6 +68,17 @@ class SearchRequest(BaseModel):
     limit: int | None = None
 
 
+class AudioResolveRequest(BaseModel):
+    url: HttpUrl
+    engine: str | None = None
+    quality: str | None = None
+
+
+class AudioSearchRequest(BaseModel):
+    keyword: str
+    limit: int | None = None
+
+
 def bilibili_result_url(entry: dict[str, Any]) -> str | None:
     candidate = entry.get("arcurl") or entry.get("bvid") or entry.get("url")
     if isinstance(candidate, str) and candidate.startswith(("http://", "https://")):
@@ -1306,6 +1317,132 @@ def find_format(entry: dict[str, Any], format_id: str | None) -> dict[str, Any]:
     raise HTTPException(status_code=404, detail="指定格式不存在或已过期。")
 
 
+def audio_formats(entry: dict[str, Any]) -> list[dict[str, Any]]:
+    return [
+        item for item in entry.get("formats") or []
+        if item.get("formatType") == "audio" or (item.get("hasAudio") and not item.get("hasVideo"))
+    ]
+
+
+def pick_audio_format(entry: dict[str, Any], quality: str | None) -> dict[str, Any]:
+    candidates = audio_formats(entry)
+    if not candidates:
+        raise HTTPException(status_code=404, detail="没有找到可用音频格式。")
+
+    preference = (quality or "best").strip().lower()
+    if preference not in {"best", "smallest", "first"}:
+        raise HTTPException(status_code=400, detail="音频质量仅支持 best、smallest 或 first。")
+    if preference == "first":
+        return candidates[0]
+
+    def score(item: dict[str, Any]) -> tuple[float, int, int]:
+        bitrate = float(item.get("abr") or item.get("vbr") or 0)
+        filesize = int(item.get("filesize") or 0)
+        confidence = 1 if item.get("formatConfidence") == "confirmed" else 0
+        return bitrate, filesize, confidence
+
+    if preference == "smallest":
+        return min(candidates, key=lambda item: (int(item.get("filesize") or 0) or 10**18, -(float(item.get("abr") or 0))))
+    return max(candidates, key=score)
+
+
+def audio_download_response(entry: dict[str, Any], selected: dict[str, Any]) -> dict[str, Any]:
+    direct_url = selected.get("directUrl")
+    if not direct_url:
+        raise HTTPException(status_code=404, detail="该音频格式没有可用下载地址。")
+
+    title = safe_filename(entry.get("title") or "audio")
+    ext = selected.get("ext") or "m4a"
+    filename = f"{title}-{selected.get('formatId') or 'audio'}.{ext}"
+    token = create_stream_token(
+        selected.get("directUrls") or direct_url,
+        merged_headers(entry.get("httpHeaders"), selected.get("httpHeaders")),
+        filename,
+        mode="http",
+        format_id=selected.get("formatId"),
+        referer_url=entry.get("webpageUrl"),
+    )
+    return {
+        "formatId": selected.get("formatId"),
+        "label": selected.get("label"),
+        "quality": selected.get("label"),
+        "ext": ext,
+        "codec": selected.get("audioCodec"),
+        "bitrate": selected.get("abr"),
+        "filesize": selected.get("filesize"),
+        "filesizeText": selected.get("filesizeText"),
+        "downloadUrl": f"/api/stream/{token}",
+        "proxyUrl": f"/api/stream/{token}",
+        "directUrl": direct_url,
+        "filename": filename,
+    }
+
+
+def extract_for_engine(target_url: str, engine: str, cookie_file: Path | None) -> dict[str, Any]:
+    if engine == "yt-dlp":
+        return extract_with_ytdlp(target_url, cookie_file)
+    if engine == "lux":
+        return extract_with_lux(target_url, cookie_file)
+    return extract_with_you_get(target_url, cookie_file)
+
+
+def resolve_audio_from_url(target_url: str, engine: str, quality: str | None) -> dict[str, Any]:
+    cleanup_expired()
+    target_url = validate_public_url(target_url)
+    parser_cookie_file: Path | None = prepare_cookie_for_engine(active_session_cookie(), engine)
+    try:
+        try:
+            info = extract_for_engine(target_url, engine, parser_cookie_file)
+            normalized = normalize_info(info, engine)
+        except Exception as error:
+            raise HTTPException(
+                status_code=422,
+                detail=classify_parse_failure(engine, target_url, error, parser_cookie_file),
+            ) from error
+    finally:
+        if parser_cookie_file is not None and parser_cookie_file != active_session_cookie():
+            parser_cookie_file.unlink(missing_ok=True)
+
+    selected = pick_audio_format(normalized, quality)
+    return {
+        "ok": True,
+        "title": normalized.get("title"),
+        "webpageUrl": normalized.get("webpageUrl") or target_url,
+        "extractor": normalized.get("extractor"),
+        "duration": normalized.get("duration"),
+        "durationText": normalized.get("durationText"),
+        "uploader": normalized.get("uploader"),
+        "thumbnail": normalized.get("thumbnail"),
+        "audio": audio_download_response(normalized, selected),
+    }
+
+
+def public_audio_search_item(item: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "title": item.get("title") or "未命名结果",
+        "url": item.get("webpageUrl"),
+        "webpageUrl": item.get("webpageUrl"),
+        "thumbnail": item.get("thumbnailProxyUrl") or item.get("thumbnail"),
+        "duration": item.get("duration"),
+        "durationText": item.get("durationText"),
+        "uploader": item.get("uploader") or "--",
+    }
+
+
+def absolute_api_url(base_url: str, value: str | None) -> str | None:
+    if not value or value.startswith(("http://", "https://")):
+        return value
+    return f"{base_url.rstrip('/')}/{value.lstrip('/')}"
+
+
+def absolutize_audio_urls(payload: dict[str, Any], base_url: str) -> dict[str, Any]:
+    audio = payload.get("audio")
+    if isinstance(audio, dict):
+        audio["downloadUrl"] = absolute_api_url(base_url, audio.get("downloadUrl"))
+        audio["proxyUrl"] = absolute_api_url(base_url, audio.get("proxyUrl"))
+    return payload
+
+
 def public_parse_response(normalized: dict[str, Any]) -> dict[str, Any]:
     response = {key: value for key, value in normalized.items() if key not in {"httpHeaders", "createdAt"}}
     response["formats"] = [
@@ -1423,12 +1560,7 @@ async def parse_video(request: Request) -> dict[str, Any]:
         if uploaded_cookie_file is not None:
             parser_cookie_file = prepare_cookie_for_engine(uploaded_cookie_file, engine)
         try:
-            if engine == "yt-dlp":
-                info = await asyncio.to_thread(extract_with_ytdlp, target_url, parser_cookie_file)
-            elif engine == "lux":
-                info = await asyncio.to_thread(extract_with_lux, target_url, parser_cookie_file)
-            else:
-                info = await asyncio.to_thread(extract_with_you_get, target_url, parser_cookie_file)
+            info = await asyncio.to_thread(extract_for_engine, target_url, engine, parser_cookie_file)
             normalized = normalize_info(info, engine)
         except Exception as error:
             raise HTTPException(
@@ -1475,6 +1607,31 @@ async def search_video(request: SearchRequest) -> dict[str, Any]:
         "keyword": keyword,
         "count": len(results),
     }
+
+
+@app.post("/api/audio/search")
+async def audio_search(request: AudioSearchRequest) -> dict[str, Any]:
+    keyword = validate_search_keyword(request.keyword)
+    limit = validate_search_limit(request.limit)
+
+    try:
+        results = await asyncio.to_thread(search_with_bilibili, keyword, limit)
+    except Exception as error:
+        raise HTTPException(status_code=422, detail=f"搜索失败：{sanitized_error(error, None)}") from error
+
+    return {
+        "ok": True,
+        "keyword": keyword,
+        "count": len(results),
+        "results": [public_audio_search_item(item) for item in results],
+    }
+
+
+@app.post("/api/audio/resolve-url")
+async def audio_resolve_url(request: Request, payload: AudioResolveRequest) -> dict[str, Any]:
+    engine = validate_engine(payload.engine or DEFAULT_ENGINE)
+    result = await asyncio.to_thread(resolve_audio_from_url, str(payload.url), engine, payload.quality)
+    return absolutize_audio_urls(result, str(request.base_url))
 
 
 @app.post("/api/download-url")

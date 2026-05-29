@@ -157,6 +157,85 @@ bash scripts/check.sh
 - `POST /api/parse`：解析视频页面 URL。
 - `POST /api/download-url`：生成短期有效下载地址。
 - `GET /api/stream/{token}`：后端代理流式转发媒体资源。
+- `POST /api/audio/search`：外部音频场景关键词搜索，返回候选视频标题和链接。
+- `POST /api/audio/resolve-url`：外部音频场景链接解析，返回音频下载地址。
+
+## 外部音频 API
+
+外部系统可以先用关键词搜索候选视频，再把用户选中的视频链接传给音频解析接口。
+音频解析接口返回完整 `downloadUrl`，外部系统可直接发起下载请求。
+
+### 关键词搜索候选视频
+
+```bash
+curl -X POST http://localhost:5000/api/audio/search \
+  -H "Content-Type: application/json" \
+  -d '{"keyword":"搜索关键词","limit":5}'
+```
+
+响应示例：
+
+```json
+{
+  "ok": true,
+  "keyword": "搜索关键词",
+  "count": 1,
+  "results": [
+    {
+      "title": "视频标题",
+      "url": "https://example.com/video/xxx",
+      "webpageUrl": "https://example.com/video/xxx",
+      "thumbnail": "https://example.com/cover.jpg",
+      "duration": 180,
+      "durationText": "3:00",
+      "uploader": "作者"
+    }
+  ]
+}
+```
+
+### 通过视频链接获取音频
+
+```bash
+curl -X POST http://localhost:5000/api/audio/resolve-url \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com/video/xxx","engine":"you-get","quality":"best"}'
+```
+
+`quality` 支持：
+
+- `best`：选择最高音质。
+- `smallest`：选择体积最小的音频。
+- `first`：选择解析器返回的第一个音频格式。
+
+响应示例：
+
+```json
+{
+  "ok": true,
+  "title": "视频标题",
+  "webpageUrl": "https://example.com/video/xxx",
+  "extractor": "you-get",
+  "duration": 180,
+  "durationText": "3:00",
+  "uploader": "作者",
+  "thumbnail": "https://example.com/cover.jpg",
+  "audio": {
+    "formatId": "audio-best",
+    "label": "audio-best · 128 kbps · M4A",
+    "quality": "audio-best · 128 kbps · M4A",
+    "ext": "m4a",
+    "codec": "mp4a",
+    "bitrate": 128,
+    "filesize": 3145728,
+    "filesizeText": null,
+    "downloadUrl": "http://localhost:5000/api/stream/token",
+    "proxyUrl": "http://localhost:5000/api/stream/token",
+    "directUrl": "https://example.com/audio.m4a",
+    "filename": "视频标题-audio-best.m4a"
+  }
+}
+```
 
 ## 常见问题
 
