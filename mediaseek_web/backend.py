@@ -1435,6 +1435,14 @@ def absolute_api_url(base_url: str, value: str | None) -> str | None:
     return f"{base_url.rstrip('/')}/{value.lstrip('/')}"
 
 
+def public_base_url(request: Request) -> str:
+    proto = request.headers.get("x-forwarded-proto") or request.url.scheme
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc
+    if host.endswith(".monkeycode-ai.online"):
+        proto = "https"
+    return f"{proto}://{host}"
+
+
 def absolutize_audio_urls(payload: dict[str, Any], base_url: str) -> dict[str, Any]:
     audio = payload.get("audio")
     if isinstance(audio, dict):
@@ -1631,7 +1639,7 @@ async def audio_search(request: AudioSearchRequest) -> dict[str, Any]:
 async def audio_resolve_url(request: Request, payload: AudioResolveRequest) -> dict[str, Any]:
     engine = validate_engine(payload.engine or DEFAULT_ENGINE)
     result = await asyncio.to_thread(resolve_audio_from_url, str(payload.url), engine, payload.quality)
-    return absolutize_audio_urls(result, str(request.base_url))
+    return absolutize_audio_urls(result, public_base_url(request))
 
 
 @app.post("/api/download-url")
